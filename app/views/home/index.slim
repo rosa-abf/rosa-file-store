@@ -1,0 +1,15 @@
+.row
+  div.col-md-6.center
+    form.form-inline#search_form
+      .form-group.search-field
+        input.form-control[type="test" id="hash" placeholder=t('.search_placeholder')]
+      | &nbsp;
+      .form-group
+        button.btn.btn-default[type="button" id="search"]
+          =t('.search_button')
+    .search_results
+      | a
+.row
+  .col-md-12
+    #file_store_uploader
+      p= t('.uploader')

@@ -1,0 +1,18 @@
+en:
+  layouts:
+    application:
+      title: "Rosa File Store"
+      menu:
+        about: "About"
+        about_url: "http://www.rosalab.com/about"
+        contacts: "Contacts"
+        contacts_url: "http://www.rosalab.com/about/contacts"
+  403_message: Access violation to this page!
+  404_message: Resource not found!
+  500_message: Something went wrong.
+
+  home:
+    index:
+      search_placeholder: "Hash for search"
+      search_button: "Search"
+      uploader: "You browser doesn't have HTML5 support."
