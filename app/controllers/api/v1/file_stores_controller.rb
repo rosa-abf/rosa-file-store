@@ -2,6 +2,7 @@ require 'net/http'
 
 class Api::V1::FileStoresController < Api::ApplicationController
   include ActionController::HttpAuthentication::Basic::ControllerMethods
+  include ActionController::Live
   before_action :authenticate, only: %i(create destroy check)
 
   # GET /file_stores?hash=3a93e5553490e39b4cd50269d51ad8438b7e20b8
@@ -26,7 +27,18 @@ class Api::V1::FileStoresController < Api::ApplicationController
     file_store = FileStore.find_by!(sha1_hash: params[:id])
 
     if file_store.file_name =~ /.*\.(log|txt|md5sum)$/
-      send_file file_store.file.path, x_sendfile: false, type: 'text/plain', disposition: 'inline'
+      response.headers['Content-Type'] = 'text/plain'
+      begin
+        tok = tokens.split("\n")
+        open(file_store.file.path, "r").each_line do |line|
+          tok.each do |t|
+            line.gsub!(t, 'token')
+          end
+          response.stream.write(line)
+        end
+      ensure
+        response.stream.close
+      end
     else
       send_file file_store.file.path, x_sendfile: false
     end
@@ -70,6 +82,17 @@ class Api::V1::FileStoresController < Api::ApplicationController
 
   def user
     @user ||= JSON.parse(@res.body)['user']
+  end
+
+  def tokens
+    @tokens = Rails.cache.fetch(['Api::V1::FileStoresController#tokens', expires_in: 5.minutes]) do
+      uri = URI.parse("https://abf.rosalinux.ru/api/v1/user/tokens")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      req = Net::HTTP::Get.new(uri.request_uri, {'Content-Type' =>'application/json'})
+      req.basic_auth ENV['FILESTORE_TOKEN'], ''
+      http.request(req).body
+    end
   end
 
   def authenticate
