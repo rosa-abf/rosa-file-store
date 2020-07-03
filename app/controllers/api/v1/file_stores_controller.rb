@@ -42,6 +42,7 @@ class Api::V1::FileStoresController < Api::ApplicationController
           end
           yielder << line
         end
+      ensure
         file.close
       end
       headers.delete("Content-Length")
