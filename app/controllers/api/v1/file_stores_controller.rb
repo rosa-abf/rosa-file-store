@@ -2,7 +2,6 @@ require 'net/http'
 
 class Api::V1::FileStoresController < Api::ApplicationController
   include ActionController::HttpAuthentication::Basic::ControllerMethods
-  include ActionController::Live
   before_action :authenticate, only: %i(create destroy check)
 
   # GET /file_stores?hash=3a93e5553490e39b4cd50269d51ad8438b7e20b8
@@ -25,20 +24,31 @@ class Api::V1::FileStoresController < Api::ApplicationController
 
   def show
     file_store = FileStore.find_by!(sha1_hash: params[:id])
+    file = if file_store.file_name =~ /.*\.(log|txt|md5sum)$/
+      open(file_store.file.path, "r")
+    elsif file_store.file_name =~ /.*\.(log.gz|txt.gz|md5sum.gz)$/
+      Zlib::GzipReader.open(file_store.file.path) rescue open(file_store.file.path, "r")
+    else
+      nil
+    end
 
-    if file_store.file_name =~ /.*\.(log|txt|md5sum)$/
+    if file
       response.headers['Content-Type'] = 'text/plain'
-      begin
-        tok = tokens.split("\n")
-        open(file_store.file.path, "r").each_line do |line|
+      tok = tokens.split("\n")
+      enum = Enumerator.new do |yielder|
+        file.each_line do |line|
           tok.each do |t|
             line.gsub!(t, 'token')
           end
-          response.stream.write(line)
+          yielder << line
         end
-      ensure
-        response.stream.close
+        file.close
       end
+      headers.delete("Content-Length")
+      headers["Cache-Control"] = "no-cache"
+      headers['Content-Type'] = 'text/plain'
+      headers['X-Accel-Buffering'] = 'no'
+      self.response_body = enum
     else
       send_file file_store.file.path, x_sendfile: false
     end

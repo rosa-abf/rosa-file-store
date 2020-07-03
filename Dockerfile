@@ -2,7 +2,7 @@ FROM ruby:2.5.3-alpine3.8 as fstore-gems
 
 WORKDIR /file_store
 RUN apk add --no-cache libpq ca-certificates tzdata libstdc++ && apk add --virtual .ruby-builddeps --no-cache postgresql-dev build-base
-RUN gem install bundler
+RUN gem install bundler:2.0.1
 COPY Gemfile Gemfile.lock ./
 RUN bundle install --without development test --jobs 16 --clean --deployment --no-cache
 RUN apk add --no-cache nodejs
@@ -17,7 +17,7 @@ ENV GEM_HOME /usr/local/bundle
 ENV BUNDLE_APP_CONFIG /usr/local/bundle
 
 ENV RAILS_ENV production
-ENV DATABASE_URL postgresql://postgres@postgres/file-store
+ENV DATABASE_URL postgresql://postgres@postgres/file-store?pool=30
 
 WORKDIR /file_store
 COPY bin ./bin
