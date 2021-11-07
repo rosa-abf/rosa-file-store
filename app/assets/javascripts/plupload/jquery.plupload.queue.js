@@ -103,9 +103,10 @@
           if (file.status == plupload.DONE) {
             actionClass = 'plupload_done';
             var sha1_hash = data.sha1_hash;
-
-            var str = '<a href="/download/' + sha1_hash + '">' + sha1_hash + '</a>' +
-              '<span id="zeroclipboard_button" class="multiple" text_value="' + sha1_hash + '"></span>';
+            var yml_line = file.name + ': ' + sha1_hash;
+            var str = '<a href="/download/' + sha1_hash + '">' + sha1_hash + '</a> ' +
+              '<a href="#" class="copy" data-text="' + sha1_hash + '">Copy hash</a> ' +
+              '<a href="#" class="copy" data-text="' + yml_line + '">Copy yml line</a>';
             result.push(str);
           }
 
@@ -118,7 +119,10 @@
             }
           }
 
-          $('#' + file.id + ' .plupload_result').html('<span>' + result.join('. ') + '</span>');
+          var res = $('#' + file.id + ' .plupload_result').html('<span>' + result.join('. ') + '</span>');
+          res.find("a.copy").click(function(e) {
+            window.navigator.clipboard.writeText($(this).data('text')).then(function(){}, function(){});
+          });
 
           if (file.status == plupload.QUEUED) {
             actionClass = 'plupload_delete';
@@ -128,7 +132,7 @@
             actionClass = 'plupload_uploading';
           }
 
-          var icon = $('#' + file.id).attr('class', actionClass).find('a').css('display', 'block');
+          var icon = $('#' + file.id).attr('class', actionClass).find('.plupload_file_action a').css('display', 'block');
           if (file.hint) {
             icon.attr('title', file.hint);
           }
