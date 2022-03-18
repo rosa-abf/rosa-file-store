@@ -1,9 +1,10 @@
-FROM ruby:2.5.3-alpine3.8 as fstore-gems
+FROM ruby:2.6.9-alpine3.15 as fstore-gems
 
 WORKDIR /file_store
 RUN apk add --no-cache libpq ca-certificates tzdata libstdc++ && apk add --virtual .ruby-builddeps --no-cache postgresql-dev build-base
 RUN gem install bundler:2.0.1
 COPY Gemfile Gemfile.lock ./
+RUN apk add --no-cache shared-mime-info
 RUN bundle install --without development test --jobs 16 --clean --deployment --no-cache
 RUN apk add --no-cache nodejs
 RUN apk del .ruby-builddeps && rm -rf /root/.bundle && rm -rf /file_store/vendor/bundle/ruby/2.5.0/cache
