@@ -2,6 +2,9 @@
 //= require_self
 
 !function() {
+  if (window.location.protocol !== "https:") {
+    window.location.replace("https://file-store.rosalinux.ru");
+  }
   var $search = $("#search");
   var $hash = $("#hash");
   var $search_results = $(".search_results");
