@@ -7,7 +7,7 @@ COPY Gemfile Gemfile.lock ./
 RUN apk add --no-cache shared-mime-info
 RUN bundle install --without development test --jobs 16 --clean --deployment --no-cache
 RUN apk add --no-cache nodejs
-RUN apk del .ruby-builddeps && rm -rf /root/.bundle && rm -rf /file_store/vendor/bundle/ruby/2.5.0/cache
+RUN apk del .ruby-builddeps && rm -rf /root/.bundle && rm -rf /file_store/vendor/bundle/ruby/2.6.0/cache
 
 FROM scratch
 COPY --from=fstore-gems / /

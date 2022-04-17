@@ -1,8 +1,9 @@
+//= require jquery
 //= require plupload
 //= require_self
 
 !function() {
-  if (window.location.protocol !== "https:") {
+  if (window.location.protocol !== "https:" && window.location.host == "file-store.rosalinux.ru" ) {
     window.location.replace("https://file-store.rosalinux.ru");
   }
   var $search = $("#search");
@@ -21,7 +22,7 @@
   function searching_success(file) {
     $search_results.removeClass("bg-info bg-warning bg-danger");
     $search_results.addClass("bg-success");
-    $search_results.html("Found file: <a href=\"/api/v1/file_stores/" + file.sha1_hash + 
+    $search_results.html("Found file: <a href=\"/api/v1/file_stores/" + file.sha1_hash +
                          "\">" + file.file_name + "</a>, by " + file.user.uname);
     $search.prop('disabled', false);
   }
@@ -57,7 +58,7 @@
     }, function() {
       searching_error();
     });
-  });  
+  });
 
   $('#search_form').on('submit', function(e) {
     e.preventDefault();
