@@ -1,4 +1,4 @@
-FROM ruby:2.6.9-alpine3.15 as fstore-gems
+FROM ruby:2.6.9-alpine3.13 as fstore-gems
 
 WORKDIR /file_store
 RUN apk add --no-cache libpq ca-certificates tzdata libstdc++ && apk add --virtual .ruby-builddeps --no-cache postgresql-dev build-base
