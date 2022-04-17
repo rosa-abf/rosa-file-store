@@ -112,10 +112,19 @@
 
           if (file.status == plupload.FAILED) {
             actionClass = 'plupload_failed';
-
             for (attribute in data) {
               messages = data[attribute];
-              result.push("" + attribute + " " + (messages.join(', ')));
+              if (attribute === "sha1_hash" && messages.length === 1 && /^'[a-z0-9]{40}' - file already exists$/.test(messages[0])) {
+                actionClass = 'plupload_done';
+                var sha1_hash = messages[0].split("'")[1];
+                var yml_line = file.name + ': ' + sha1_hash;
+                str = '<a href="/download/' + sha1_hash + '">' + sha1_hash + '</a> ' +
+                  '<a href="#" class="copy" data-text="' + sha1_hash + '">Copy hash</a> ' +
+                  '<a href="#" class="copy" data-text="' + yml_line + '">Copy yml line</a>';
+                result.push(str);
+              } else {
+                result.push("" + attribute + " " + (messages.join(', ')));
+              }
             }
           }
 
