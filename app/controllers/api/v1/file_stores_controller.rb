@@ -10,6 +10,7 @@ class Api::V1::FileStoresController < Api::ApplicationController
     fs = FileStore.by_hash(params[:hash])
 
     file_stores = fs.map do |item|
+      item.touch
       {
         sha1_hash: item.sha1_hash,
         file_name: File.basename(item.file.path),
@@ -24,6 +25,7 @@ class Api::V1::FileStoresController < Api::ApplicationController
 
   def show
     file_store = FileStore.find_by!(sha1_hash: params[:id])
+    file_store.touch
     file = if file_store.file_name =~ /.*\.(log|txt|md5sum)$/
       open(file_store.file.path, "r")
     elsif file_store.file_name =~ /.*\.(log.gz|txt.gz|md5sum.gz)$/
