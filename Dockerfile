@@ -1,24 +1,28 @@
-FROM ruby:2.6.9-alpine3.13 as fstore-gems
+FROM ruby:3.3.4-alpine3.20 as fstore-gems
 
 WORKDIR /file_store
 RUN apk add --no-cache libpq ca-certificates tzdata libstdc++ && apk add --virtual .ruby-builddeps --no-cache postgresql-dev build-base
-RUN gem install bundler:2.0.1
+RUN gem update --system
+RUN gem install bundler
+RUN bundle config set --local clean 'true' && bundle config set --local deployment 'true' && \
+    bundle config set --local without 'development test' && bundle config set --local no-cache 'true'
 COPY Gemfile Gemfile.lock ./
-RUN apk add --no-cache shared-mime-info
-RUN bundle install --without development test --jobs 16 --clean --deployment --no-cache
-RUN apk add --no-cache nodejs
-RUN apk del .ruby-builddeps && rm -rf /root/.bundle && rm -rf /file_store/vendor/bundle/ruby/2.6.0/cache
+RUN apk add --no-cache shared-mime-info nodejs
+RUN bundle install --verbose --jobs 16
+RUN apk del --no-cache .ruby-builddeps && rm -rf /root/.bundle && rm -rf /file_store/vendor/bundle/ruby/3.3.0/cache
 
 FROM scratch
 COPY --from=fstore-gems / /
 
 RUN touch /MIGRATE
 
-ENV GEM_HOME /usr/local/bundle
-ENV BUNDLE_APP_CONFIG /usr/local/bundle
+ENV GEM_HOME=/usr/local/bundle
+ENV BUNDLE_APP_CONFIG=/usr/local/bundle
 
-ENV RAILS_ENV production
-ENV DATABASE_URL postgresql://postgres@postgres/file-store?pool=30
+ENV RAILS_ENV=production
+ENV DATABASE_URL=postgresql://postgres@postgres/file-store?pool=30
+
+ENV RUBYOPT="--enable-yjit --yjit-exec-mem-size=384"
 
 WORKDIR /file_store
 COPY bin ./bin
