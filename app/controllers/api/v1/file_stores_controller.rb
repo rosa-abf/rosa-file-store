@@ -25,33 +25,9 @@ class Api::V1::FileStoresController < Api::ApplicationController
 
   def show
     file_store = FileStore.find_by!(sha1_hash: params[:id])
-    file_store.touch
-    file = if file_store.file_name =~ /.*\.(log|txt|md5sum)$/
-      open(file_store.file.path, "r")
-    elsif file_store.file_name =~ /.*\.(log.gz|txt.gz|md5sum.gz)$/
-      Zlib::GzipReader.open(file_store.file.path) rescue open(file_store.file.path, "r")
-    else
-      nil
-    end
 
-    if file
-      response.headers['Content-Type'] = 'text/plain'
-      tok = tokens.split("\n")
-      enum = Enumerator.new do |yielder|
-        file.each_line do |line|
-          tok.each do |t|
-            line.gsub!(t, 'token')
-          end
-          yielder << line
-        end
-      ensure
-        file.close
-      end
-      headers.delete("Content-Length")
-      headers["Cache-Control"] = "no-cache"
-      headers['Content-Type'] = 'text/plain'
-      headers['X-Accel-Buffering'] = 'no'
-      self.response_body = enum
+    if file_store.file_name =~ /.*\.(log|txt|md5sum)$/
+      send_file file_store.file.path, x_sendfile: false, type: 'text/plain', disposition: 'inline'
     else
       send_file file_store.file.path, x_sendfile: false
     end
@@ -95,17 +71,6 @@ class Api::V1::FileStoresController < Api::ApplicationController
 
   def user
     @user ||= JSON.parse(@res.body)['user']
-  end
-
-  def tokens
-    @tokens = Rails.cache.fetch(['Api::V1::FileStoresController#tokens', expires_in: 5.minutes]) do
-      uri = URI.parse("https://abf.rosalinux.ru/api/v1/user/tokens")
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      req = Net::HTTP::Get.new(uri.request_uri, {'Content-Type' =>'application/json'})
-      req.basic_auth ENV['FILESTORE_TOKEN'], ''
-      http.request(req).body
-    end
   end
 
   def authenticate
