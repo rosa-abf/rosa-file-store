@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     end
   end
 
-  get '/download/:id' => 'api/v1/file_stores#show'
+  get '/download/:id' => 'api/v1/file_stores#show', as: :download
+  get '/stream_gz/:id' => 'api/v1/stream_gz#show', as: :stream_gz
   root to: 'home#index'
 end

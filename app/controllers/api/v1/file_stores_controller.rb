@@ -2,6 +2,7 @@ require 'net/http'
 
 class Api::V1::FileStoresController < Api::ApplicationController
   include ActionController::HttpAuthentication::Basic::ControllerMethods
+
   before_action :authenticate, only: %i(create destroy check)
 
   # GET /file_stores?hash=3a93e5553490e39b4cd50269d51ad8438b7e20b8
@@ -26,7 +27,9 @@ class Api::V1::FileStoresController < Api::ApplicationController
   def show
     file_store = FileStore.find_by!(sha1_hash: params[:id])
 
-    if file_store.file_name =~ /.*\.(log|txt|md5sum)$/
+    if file_store.file_name =~/.*\.log.gz$/
+      redirect_to stream_gz_path(id: params[:id])
+    elsif file_store.file_name =~ /.*\.(log|txt|md5sum)$/
       send_file file_store.file.path, x_sendfile: false, type: 'text/plain', disposition: 'inline'
     else
       send_file file_store.file.path, x_sendfile: false
